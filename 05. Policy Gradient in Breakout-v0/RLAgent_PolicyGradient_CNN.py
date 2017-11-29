@@ -4,8 +4,8 @@ class PolicyGradient:
     def __init__(
             self,
             n_actions,
-            imgWidth,
-            imgHeight,
+            imgRows,
+            imgCols,
             imgNumber,
             imgChannel,
             LearningRate = 0.01,
@@ -15,10 +15,10 @@ class PolicyGradient:
         self.n_actions = n_actions
 
         # 圖片相關
-        self.imgWidth = imgWidth
-        self.imgHeight = imgHeight
+        self.imgRows = imgRows
+        self.imgCols = imgCols
         self.imgNumber = imgNumber
-        self.imgChannel = imgNumber
+        self.imgChannel = imgChannel
 
         self.LearningRate = LearningRate
         self.RewardDecay = RewardDecay
@@ -42,13 +42,10 @@ class PolicyGradient:
         hiddenUnits = 10
 
         # Input
-        imgFlatSize = self.imgWidth * self.imgHeight * self.imgNumber * self.imgChannel
         with tf.name_scope("Input"):
-            self.observations = tf.placeholder(tf.float32, [None, self.imgFlatSize], name = "observations")
-
-            # 轉成 k 張圖片
-            self.obImageArray = tf.reshape(self.observations, [self.imgNumber, self.imgWidth, self.imgHeight, self.imgChannel])
-
+            # 前 k 張圖片，用 channel 判斷
+            self.observationsArray = tf.placeholder(tf.float32, [None, self.imgRows, self.imgCols, self.imgNumber * self.imgChannel], name = "observationsArray")
+            
             self.actionsNum = tf.placeholder(tf.int32, [None], name = "Action")                  # 注意 [None] 跟 [None,] 是一樣的，一維的陣列，裡面裝著不知道大小的 scalar，跟 [None, 1] 不一樣，這個是 二維陣列
             self.DeltaValue = tf.placeholder(tf.float32, [None], name="ActionValue")
 
@@ -57,15 +54,15 @@ class PolicyGradient:
         biasInit = tf.random_normal_initializer(mean=0, stddev = 0.1)
 
         # Fully Connected 1
-        layer1 = tf.layers.dense(
-            inputs = self.observations,
-            units = hiddenUnits,
-            activation = tf.nn.tanh,
-            kernel_initializer=weightInit,
-            bias_initializer=biasInit,
-            name="layer1"
-        )
-        # layer1 = tf.layers.conv2d()
+#         layer1 = tf.layers.dense(
+#             inputs = self.observationsArray,
+#             units = hiddenUnits,
+#             activation = tf.nn.tanh,
+#             kernel_initializer=weightInit,
+#             bias_initializer=biasInit,
+#             name="layer1"
+#         )
+            layer1 = tf.layers.conv2d(input)
         # Fully Connected 2
         layer2 = tf.layers.dense(
             inputs = layer1,
