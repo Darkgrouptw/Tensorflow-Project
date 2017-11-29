@@ -39,7 +39,14 @@ class PolicyGradient:
     # Observation 跟 State 是代表同樣的事情，觀察到的東西就是 state，但是 Policy Gradient 裡面，沒有 State 的概念，是以機率來說
     # 建造 Neural Network
     def BuildNet(self):
-        hiddenUnits = 10
+        # 參數設定
+        # 用的 filter 數目及大小
+        filter1Count = 16
+        filter1Size = 5
+        filter2Count = 20
+        filter2Size = 5
+        fc1Count = 128
+        fc2Count = 64
 
         # Input
         with tf.name_scope("Input"):
@@ -53,27 +60,65 @@ class PolicyGradient:
         weightInit = tf.random_normal_initializer(mean=0, stddev = 0.3)
         biasInit = tf.random_normal_initializer(mean=0, stddev = 0.1)
 
+        # Conv1
+        conv1 = tf.layers.conv2d(
+            inputs = self.observationsArray,
+            filters = filter1Count,
+            kernel_size = filter1Size,
+            strides = 1,
+            padding = "same",
+            activation = tf.nn.relu,
+            kernel_initializer = weightInit,
+            bias_initializer = biasInit,
+            name = "Conv1"
+        )
+
+        # Conv2
+        conv2 = tf.layers.conv2d(
+            inputs = conv1,
+            filters = filter2Count,
+            kernel_size = filter2Size,
+            strides = 1,
+            padding = "same",
+            activation = tf.nn.relu,
+            kernel_initializer = weightInit,
+            bias_initializer = biasInit,
+            name = "Conv2"
+        )
+
+        # 把資料壓平
+        flatData = tf.reshape(conv2, [-1])
+
         # Fully Connected 1
-#         layer1 = tf.layers.dense(
-#             inputs = self.observationsArray,
-#             units = hiddenUnits,
-#             activation = tf.nn.tanh,
-#             kernel_initializer=weightInit,
-#             bias_initializer=biasInit,
-#             name="layer1"
-#         )
-            layer1 = tf.layers.conv2d(input)
-        # Fully Connected 2
-        layer2 = tf.layers.dense(
-            inputs = layer1,
+        fc1 = tf.layers.dense(
+            inputs = flatData,
+            units = fc1Count,
+            activation = tf.nn.relu,
+            kernel_initializer = weightInit,
+            bias_initializer = biasInit,
+            name = "FC1"
+        )
+
+        fc2 = tf.layers.dense(
+            inputs = fc1,
+            units = fc2Count,
+            activation = tf.nn.relu,
+            kernel_initializer = weightInit,
+            bias_initializer = biasInit,
+            name = "FC2"
+        )
+
+        fc3 = tf.layers.dense(
+            inputs = fc2,
             units = self.n_actions,
             kernel_initializer=weightInit,
             bias_initializer=biasInit,
-            name="Layer2"
+            name = "FC3"
         )
 
+
         # 每個動作的機率
-        self.ActionProb = tf.nn.softmax(layer2, name="ActionProb")
+        self.ActionProb = tf.nn.softmax(fc3, name="ActionProb")
 
         # Loss Function
         with tf.name_scope("Loss"):
