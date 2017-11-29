@@ -4,13 +4,22 @@ class PolicyGradient:
     def __init__(
             self,
             n_actions,
-            n_features,
+            imgWidth,
+            imgHeight,
+            imgNumber,
+            imgChannel,
             LearningRate = 0.01,
             RewardDecay = 0.95,                         # 衰減比例
             IsOutputGraph = False
     ):
         self.n_actions = n_actions
-        self.n_features = n_features
+
+        # 圖片相關
+        self.imgWidth = imgWidth
+        self.imgHeight = imgHeight
+        self.imgNumber = imgNumber
+        self.imgChannel = imgNumber
+
         self.LearningRate = LearningRate
         self.RewardDecay = RewardDecay
 
@@ -33,8 +42,13 @@ class PolicyGradient:
         hiddenUnits = 10
 
         # Input
+        imgFlatSize = self.imgWidth * self.imgHeight * self.imgNumber * self.imgChannel
         with tf.name_scope("Input"):
-            self.observations = tf.placeholder(tf.float32, [None, self.n_features], name = "observations")
+            self.observations = tf.placeholder(tf.float32, [None, self.imgFlatSize], name = "observations")
+
+            # 轉成 k 張圖片
+            self.obImageArray = tf.reshape(self.observations, [self.imgNumber, self.imgWidth, self.imgHeight, self.imgChannel])
+
             self.actionsNum = tf.placeholder(tf.int32, [None], name = "Action")                  # 注意 [None] 跟 [None,] 是一樣的，一維的陣列，裡面裝著不知道大小的 scalar，跟 [None, 1] 不一樣，這個是 二維陣列
             self.DeltaValue = tf.placeholder(tf.float32, [None], name="ActionValue")
 
@@ -51,6 +65,7 @@ class PolicyGradient:
             bias_initializer=biasInit,
             name="layer1"
         )
+        # layer1 = tf.layers.conv2d()
         # Fully Connected 2
         layer2 = tf.layers.dense(
             inputs = layer1,
