@@ -58,19 +58,17 @@ class DeepQNetwork:
     def BuildNet(self):
         self.state = tf.placeholder(tf.float32, [None, self.n_features], name="State")
         self.q_target = tf.placeholder(tf.float32,[None, self.n_actions], name="Q_Target")
+        
+        # Hidden Layer
+        num_hidden_unit = 20
 
         #############################################################
         # Evaluate Net
         #############################################################
         with tf.variable_scope("EvalNet"):
             collectionName = ["EvalNet_params", tf.GraphKeys.GLOBAL_VARIABLES]
-            num_hidden_unit = 20
-
-            w_initializer = tf.random_normal_initializer(0, 0.3)
-            b_initializer = tf.constant_initializer(0.1)
 
             with tf.variable_scope("Layer1"):
-                """
                 layer1_weight = tf.Variable(
                     tf.random_normal([self.n_features, num_hidden_unit]),
                     collections=collectionName,
@@ -84,16 +82,8 @@ class DeepQNetwork:
 
                 # 經過 Relu，將大的越大，沒用的消除為0
                 layer1 = tf.nn.relu(tf.matmul(self.state, layer1_weight) + layer1_bias)
-                """
-                layer1 = tf.layers.dense(
-                    self.state,
-                    num_hidden_unit,
-                    activation=tf.nn.relu,
-                    kernel_initializer=w_initializer,
-                    bias_initializer=b_initializer
-                )
+                
             with tf.variable_scope("Layer2"):
-                """
                 layer2_weight = tf.Variable(
                     tf.random_normal([num_hidden_unit, self.n_actions]),
                     collections=collectionName,
@@ -104,15 +94,9 @@ class DeepQNetwork:
                     collections=collectionName,
                     name="layer2_bias"
                 )
+                
                 self.q_eval = tf.matmul(layer1, layer2_weight) + layer2_bias
-                """
-                self.q_eval = tf.layers.dense(
-                    layer1,
-                    self.n_actions,
-                    kernel_initializer = w_initializer,
-                    bias_initializer= b_initializer
-                )
-
+                
         with tf.name_scope("Loss"):
             # 要依照現實預測的 QTarget，及 預測出來的差距做 loss function
             self.loss = tf.reduce_mean(tf.squared_difference(self.q_target, self.q_eval))
@@ -129,7 +113,7 @@ class DeepQNetwork:
             # Evaluate Net
             #############################################################
             collectionName = ["TargetNet_params", tf.GraphKeys.GLOBAL_VARIABLES]
-            num_hidden_unit = 10
+            
 
             with tf.variable_scope("Layer1"):
                 layer1_weight = tf.Variable(
@@ -233,7 +217,6 @@ class DeepQNetwork:
         leave other action as error=0 cause we didn't choose it.
         """
         q_target = q_eval.copy()
-
         batch_index = np.arange(self.batch_size, dtype=np.int32)
         eval_act_index = batch_memory[:, self.n_features].astype(int)
         reward = batch_memory[:, self.n_features + 1]
