@@ -1,5 +1,6 @@
 import numpy as np
 import tensorflow as tf
+import matplotlib.pyplot as plt
 
 np.random.seed(1)
 tf.set_random_seed(1)
@@ -239,7 +240,6 @@ class DeepQNetwork:
         self.learn_step_counter += 1
 
     def plot_cost(self):
-        import matplotlib.pyplot as plt
         plt.plot(np.arange(len(self.cost_histogram)), self.cost_histogram)
         plt.ylabel('Cost')
         plt.xlabel('training steps')
